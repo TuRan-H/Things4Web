@@ -1,0 +1,17 @@
+# Rust
+target/
+backend/target/
+**/*.rs.bk
+Cargo.lock
+
+# Node / Vite
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+.DS_Store
+
+# Logs & temp
+*.log
+.env
+.env.local

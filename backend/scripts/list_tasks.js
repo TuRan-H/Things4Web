@@ -72,19 +72,19 @@ function findTargetContainer(app, identifier) {
     } catch (e) { }
   }
 
-  // 2. 按 ID 查找内置清单或区域
+  // 2. 按 ID 查找区域
   try {
-    const listById = app.lists.byId(identifier);
-    if (listById && listById.name()) {
-      return { target: listById, kind: "list", name: listById.name() };
+    const areaById = app.areas.byId(identifier);
+    if (areaById && areaById.name()) {
+      return { target: areaById, kind: "area", name: areaById.name() };
     }
   } catch (e) { }
 
-  // 3. 按名称查找内置清单或区域 (Things3 的 lists 集合包含内置清单和 areas)
+  // 3. 按名称查找区域
   try {
-    const matchedLists = app.lists.whose({ name: identifier })();
-    if (matchedLists && matchedLists.length > 0) {
-      return { target: matchedLists[0], kind: "list", name: matchedLists[0].name() };
+    const matchedAreas = app.areas.whose({ name: identifier })();
+    if (matchedAreas && matchedAreas.length > 0) {
+      return { target: matchedAreas[0], kind: "area", name: matchedAreas[0].name() };
     }
   } catch (e) { }
 
@@ -101,6 +101,22 @@ function findTargetContainer(app, identifier) {
     const matchedProjs = app.projects.whose({ name: identifier })();
     if (matchedProjs && matchedProjs.length > 0) {
       return { target: matchedProjs[0], kind: "project", name: matchedProjs[0].name() };
+    }
+  } catch (e) { }
+
+  // 6. 按 ID 查找内置清单
+  try {
+    const listById = app.lists.byId(identifier);
+    if (listById && listById.name()) {
+      return { target: listById, kind: "builtin", name: listById.name() };
+    }
+  } catch (e) { }
+
+  // 7. 按名称查找内置清单
+  try {
+    const matchedLists = app.lists.whose({ name: identifier })();
+    if (matchedLists && matchedLists.length > 0) {
+      return { target: matchedLists[0], kind: "builtin", name: matchedLists[0].name() };
     }
   } catch (e) { }
 
@@ -148,7 +164,33 @@ function run(argv) {
           },
         });
       }
-      todos = container.target.toDos();
+
+      if (container.kind === "area") {
+        // 在 Things3 AppleScript 中，area.toDos() 会同时包含 project 与普通 todo。
+        // project 是一个项目列表(list)，绝不是一个普通待办(todo)。
+        // 因此展开 project 内的实际任务，避免将 project 错误显示为单个 todo。
+        const rawItems = container.target.toDos();
+        for (let i = 0; i < rawItems.length; i++) {
+          const item = rawItems[i];
+          let pcls = null;
+          try {
+            pcls = item.properties().pcls;
+          } catch (e) {}
+
+          if (pcls === "project") {
+            try {
+              const subTasks = item.toDos();
+              for (let j = 0; j < subTasks.length; j++) {
+                todos.push(subTasks[j]);
+              }
+            } catch (e) {}
+          } else {
+            todos.push(item);
+          }
+        }
+      } else {
+        todos = container.target.toDos();
+      }
     } else {
       // 未指定清单时，返回所有待办
       todos = app.toDos();
@@ -161,6 +203,11 @@ function run(argv) {
       try {
         p = todo.properties();
       } catch (err) {
+        continue;
+      }
+
+      // 防御：若当前对象本身依然是 project，绝不作为 todo 导出
+      if (p.pcls === "project") {
         continue;
       }
 
@@ -184,6 +231,14 @@ function run(argv) {
         try {
           areaId = p.area.id();
           areaName = p.area.name();
+        } catch (e) { }
+      } else if (p.project) {
+        try {
+          const projArea = p.project.area();
+          if (projArea) {
+            areaId = projArea.id();
+            areaName = projArea.name();
+          }
         } catch (e) { }
       }
 
