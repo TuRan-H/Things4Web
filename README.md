@@ -2,8 +2,6 @@
 
 Things4Web 是为 macOS 原生待办应用 [Things3](https://culturedcode.com/things/) 打造的 Web 客户端。通过在 macOS 宿主后台运行轻量 Rust 后端服务，并利用 JXA (JavaScript for Automation) 与 Things3 官方接口通信，使用户能够在局域网任意设备、移动端或跨平台的现代浏览器中无缝浏览、创建并管理 Things3 任务。
 
----
-
 ## 架构设计
 
 ```text
@@ -17,12 +15,6 @@ Things4Web 是为 macOS 原生待办应用 [Things3](https://culturedcode.com/th
              v
 macOS 本地 Things3 客户端
 ```
-
-- **安全防注入**：Rust 后端通过 `tokio::process::Command` 采用参数数组直接传递 JSON 载荷执行 JXA 脚本，严禁 Shell 字符串拼接。
-- **非侵入式数据读取**：严格依赖 Things3 原生 AppleScript/JXA 字典，不直接读写本地 SQLite 数据库，保护数据一致性与安全性。
-- **层级关系解构**：针对 Things3 中项目 (Project) 继承自待办 (ToDo) 的特性，在脚本层进行了多层解构与归属计算，避免项目被误当做普通待办输出，并支持递归继承 Area。
-
----
 
 ## 功能特性
 
@@ -42,7 +34,6 @@ macOS 本地 Things3 客户端
 - **Rust**：1.75+ (Cargo)
 - **Node.js**：18.0+ (npm / pnpm)
 
----
 
 ## 快速开始
 
@@ -61,45 +52,6 @@ npm install
 cd ..
 ```
 
-### 3. 一键启动
-
-项目根目录提供了启动脚本 `run.sh`，可同时拉起后端与前端开发服务：
-
-```bash
-./run.sh
-```
-
-或者分窗口手动启动：
-
-```bash
-# 终端 1：启动 Rust 后端 (监听 127.0.0.1:3001)
-cd backend
-cargo run
-
-# 终端 2：启动 Vite 前端 (监听 http://localhost:5173)
-cd frontend
-npm run dev
-```
-
-首次在 macOS 终端中运行时，系统会弹出授权提示允许访问 Things3，点击“好”即可。
-
----
-
-## 接口定义
-
-后端服务默认运行于 `http://127.0.0.1:3001`：
-
-| 方法 | 端点 | 说明 |
-| :--- | :--- | :--- |
-| `GET` | `/healthz` | 基础健康检查 |
-| `GET` | `/api/v1/lists` | 获取所有内置清单、区域及项目元数据 |
-| `GET` | `/api/v1/tasks` | 获取待办列表，参数：`listName`, `listId`, `status` |
-| `POST` | `/api/v1/tasks` | 创建待办，Body: `{ name, notes, dueDate, tagNames, ... }` |
-| `POST` | `/api/v1/tasks/:id/complete` | 快速标记任务为完成 |
-| `PATCH` | `/api/v1/tasks/:id` | 修改任务状态，Body: `{ status: "open" \| "completed" }` |
-| `POST` | `/api/v1/refresh` | 激活 Things3 并触发后台同步 |
-
----
 
 ## 目录结构
 
