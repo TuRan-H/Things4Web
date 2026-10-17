@@ -5,9 +5,14 @@ import { Task } from '../types/things';
 interface TaskDetailModalProps {
   task: Task | null;
   onClose: () => void;
+  onToggleStatus?: (task: Task) => void;
 }
 
-export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose }) => {
+export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
+  task,
+  onClose,
+  onToggleStatus,
+}) => {
   if (!task) return null;
 
   const formatIso = (iso: string | null) => {
@@ -40,7 +45,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div className="detail-row">
             <span className="detail-label">状态:</span>
-            <span className="detail-value" style={{ textTransform: 'capitalize' }}>
+            <span className="detail-value" style={{ display: 'inline-flex', alignItems: 'center', textTransform: 'capitalize' }}>
               <span
                 style={{
                   display: 'inline-block',
@@ -57,6 +62,15 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose 
                 }}
               />
               {task.status === 'open' ? '进行中 (Open)' : task.status === 'completed' ? '已完成 (Completed)' : '已取消 (Canceled)'}
+              {onToggleStatus && (
+                <button
+                  type="button"
+                  className="modal-toggle-status-btn"
+                  onClick={() => onToggleStatus(task)}
+                >
+                  {task.status === 'completed' ? '设为未完成' : '设为已完成'}
+                </button>
+              )}
             </span>
           </div>
 

@@ -60,3 +60,24 @@ pub struct TaskQueryParams {
 pub struct RefreshParams {
     pub relaunch: Option<bool>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateTaskPayload {
+    pub name: String,
+    #[serde(default)]
+    pub notes: Option<String>,
+    #[serde(default)]
+    pub target_list: Option<String>,
+    #[serde(default)]
+    pub due_date: Option<String>,
+    #[serde(default)]
+    pub tags: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateTaskStatusPayload {
+    #[serde(default)]
+    pub status: Option<String>,
+}

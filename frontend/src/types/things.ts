@@ -33,3 +33,12 @@ export interface TaskQueryParams {
   listId?: string;
   status?: string;
 }
+
+export interface CreateTaskInput {
+  name: string;
+  notes?: string;
+  targetList?: string;
+  dueDate?: string | null;
+  tags?: string[];
+}
+

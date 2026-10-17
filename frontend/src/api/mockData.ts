@@ -100,3 +100,34 @@ export const MOCK_TASKS: Task[] = [
     modificationDate: '2026-09-28T10:00:00.000Z',
   },
 ];
+
+let mockTasksStore: Task[] = [...MOCK_TASKS];
+
+export function getMockTasks(): Task[] {
+  return [...mockTasksStore];
+}
+
+export function addMockTask(task: Task): void {
+  mockTasksStore = [task, ...mockTasksStore];
+}
+
+export function updateMockTaskStatus(id: string, status: 'open' | 'completed' | 'canceled'): Task | null {
+  const index = mockTasksStore.findIndex((t) => t.id === id);
+  if (index === -1) return null;
+
+  const now = new Date().toISOString();
+  const updated: Task = {
+    ...mockTasksStore[index],
+    status,
+    completionDate: status === 'completed' ? now : null,
+    cancellationDate: status === 'canceled' ? now : null,
+    modificationDate: now,
+  };
+  mockTasksStore = [
+    ...mockTasksStore.slice(0, index),
+    updated,
+    ...mockTasksStore.slice(index + 1),
+  ];
+  return updated;
+}
+

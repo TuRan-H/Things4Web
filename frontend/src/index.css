@@ -568,3 +568,215 @@ body {
   white-space: pre-wrap;
   color: #374151;
 }
+
+/* Task Checkbox Button */
+.task-checkbox-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  color: inherit;
+  outline: none;
+}
+
+.task-checkbox-btn:hover .task-checkbox.unchecked {
+  color: #4f46e5;
+  transform: scale(1.1);
+}
+
+.task-checkbox-btn:hover .task-checkbox.checked {
+  color: #059669;
+}
+
+.task-checkbox.checked {
+  color: var(--accent-green);
+}
+
+/* Task Create Input */
+.task-create-container {
+  background: #ffffff;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+}
+
+.task-create-container:focus-within,
+.task-create-container.expanded {
+  border-style: solid;
+  border-color: #6366f1;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.08);
+}
+
+.task-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-create-main-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.task-create-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6366f1;
+}
+
+.task-create-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: #111827;
+  background: transparent;
+}
+
+.task-create-input::placeholder {
+  color: #9ca3af;
+  font-size: 13.5px;
+}
+
+.task-create-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.task-create-toggle-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.task-create-toggle-btn:hover {
+  color: #4b5563;
+  background: #f3f4f6;
+}
+
+.task-create-submit-btn {
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s;
+}
+
+.task-create-submit-btn:hover:not(:disabled) {
+  background: #4338ca;
+}
+
+.task-create-submit-btn:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.task-create-expanded-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #f3f4f6;
+  margin-top: 4px;
+}
+
+.task-create-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.task-create-field label {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.task-create-textarea {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #111827;
+  resize: vertical;
+  outline: none;
+}
+
+.task-create-textarea:focus {
+  border-color: #6366f1;
+}
+
+.task-create-row-fields {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.task-create-date-input,
+.task-create-tag-input {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 12.5px;
+  color: #111827;
+  outline: none;
+  background: #fff;
+}
+
+.task-create-date-input:focus,
+.task-create-tag-input:focus {
+  border-color: #6366f1;
+}
+
+.task-create-error {
+  font-size: 12px;
+  color: #ef4444;
+  padding-top: 2px;
+}
+
+.modal-toggle-status-btn {
+  margin-left: 10px;
+  padding: 3px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+  background-color: #f9fafb;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.modal-toggle-status-btn:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+

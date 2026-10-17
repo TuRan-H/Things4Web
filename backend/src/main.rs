@@ -1,12 +1,18 @@
 mod models;
 mod things;
 
-use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
+use axum::{
+    extract::{Path, Query},
+    http::StatusCode,
+    response::IntoResponse,
+    routing::{get, patch, post},
+    Json, Router,
+};
 use std::net::SocketAddr;
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::models::{RefreshParams, TaskQueryParams};
+use crate::models::{CreateTaskPayload, RefreshParams, TaskQueryParams, UpdateTaskStatusPayload};
 
 async fn health_check() -> impl IntoResponse {
     Json(serde_json::json!({ "status": "ok" }))
@@ -22,6 +28,33 @@ async fn get_tasks(
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let tasks = things::list_tasks(params).await?;
     Ok(Json(tasks))
+}
+
+async fn post_create_task(
+    Json(payload): Json<CreateTaskPayload>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let task = things::create_task(payload).await?;
+    Ok((StatusCode::CREATED, Json(task)))
+}
+
+async fn post_complete_task(
+    Path(id): Path<String>,
+    payload: Option<Json<UpdateTaskStatusPayload>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let status = payload
+        .and_then(|Json(p)| p.status)
+        .unwrap_or_else(|| "completed".to_string());
+    let task = things::complete_task(&id, Some(&status)).await?;
+    Ok(Json(task))
+}
+
+async fn patch_task(
+    Path(id): Path<String>,
+    Json(payload): Json<UpdateTaskStatusPayload>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let status = payload.status.as_deref().unwrap_or("completed");
+    let task = things::complete_task(&id, Some(status)).await?;
+    Ok(Json(task))
 }
 
 async fn post_refresh(
@@ -41,8 +74,10 @@ pub fn create_app() -> Router {
     Router::new()
         .route("/healthz", get(health_check))
         .route("/api/v1/lists", get(get_lists))
-        .route("/api/v1/tasks", get(get_tasks))
-        .route("/api/v1/refresh", axum::routing::post(post_refresh))
+        .route("/api/v1/tasks", get(get_tasks).post(post_create_task))
+        .route("/api/v1/tasks/:id/complete", post(post_complete_task))
+        .route("/api/v1/tasks/:id", patch(patch_task))
+        .route("/api/v1/refresh", post(post_refresh))
         .layer(cors)
 }
 
@@ -132,5 +167,34 @@ mod tests {
         assert_eq!(lists[0].kind, "project");
         assert_eq!(lists[0].name, "ML");
         assert_eq!(lists[0].area_name.as_deref(), Some("学习"));
+    }
+
+    #[test]
+    fn maps_create_task_payload_json() {
+        use crate::models::CreateTaskPayload;
+        let sample = r#"{
+            "name": "新任务",
+            "notes": "备注内容",
+            "targetList": "今天",
+            "dueDate": "2026-10-10",
+            "tags": ["工作", "紧急"]
+        }"#;
+
+        let payload: CreateTaskPayload =
+            serde_json::from_str(sample).expect("Failed to deserialize create task payload");
+        assert_eq!(payload.name, "新任务");
+        assert_eq!(payload.notes.as_deref(), Some("备注内容"));
+        assert_eq!(payload.target_list.as_deref(), Some("今天"));
+        assert_eq!(payload.due_date.as_deref(), Some("2026-10-10"));
+        assert_eq!(payload.tags, Some(vec!["工作".into(), "紧急".into()]));
+    }
+
+    #[test]
+    fn maps_update_task_status_payload_json() {
+        use crate::models::UpdateTaskStatusPayload;
+        let sample = r#"{"status": "completed"}"#;
+        let payload: UpdateTaskStatusPayload =
+            serde_json::from_str(sample).expect("Failed to deserialize update status payload");
+        assert_eq!(payload.status.as_deref(), Some("completed"));
     }
 }

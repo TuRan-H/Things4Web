@@ -5,20 +5,21 @@ import { Task } from '../types/things';
 interface TaskItemProps {
   task: Task;
   onSelect: (task: Task) => void;
+  onToggleStatus?: (task: Task) => void;
 }
 
-export const TaskItem: React.FC<TaskItemProps> = ({ task, onSelect }) => {
+export const TaskItem: React.FC<TaskItemProps> = ({ task, onSelect, onToggleStatus }) => {
   const isCompleted = task.status === 'completed';
   const isCanceled = task.status === 'canceled';
 
   const renderStatusIcon = () => {
     if (isCompleted) {
-      return <CheckCircle2 size={18} className="task-checkbox" />;
+      return <CheckCircle2 size={18} className="task-checkbox checked" />;
     }
     if (isCanceled) {
-      return <XCircle size={18} className="task-checkbox" color="#9ca3af" />;
+      return <XCircle size={18} className="task-checkbox canceled" color="#9ca3af" />;
     }
-    return <Circle size={18} className="task-checkbox" />;
+    return <Circle size={18} className="task-checkbox unchecked" />;
   };
 
   return (
@@ -26,7 +27,17 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onSelect }) => {
       className={`task-card ${isCompleted ? 'completed' : ''} ${isCanceled ? 'canceled' : ''}`}
       onClick={() => onSelect(task)}
     >
-      {renderStatusIcon()}
+      <button
+        type="button"
+        className="task-checkbox-btn"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleStatus?.(task);
+        }}
+        title={isCompleted ? '标为未完成' : '标为已完成'}
+      >
+        {renderStatusIcon()}
+      </button>
 
       <div className="task-body">
         <div className="task-header-line">

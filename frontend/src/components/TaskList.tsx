@@ -7,6 +7,7 @@ interface TaskListProps {
   tasks: Task[];
   loading: boolean;
   onSelectTask: (task: Task) => void;
+  onToggleStatus?: (task: Task) => void;
   selectedList: string;
 }
 
@@ -14,6 +15,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   tasks,
   loading,
   onSelectTask,
+  onToggleStatus,
   selectedList,
 }) => {
   if (loading) {
@@ -43,7 +45,12 @@ export const TaskList: React.FC<TaskListProps> = ({
   return (
     <div className="task-list">
       {tasks.map((task) => (
-        <TaskItem key={task.id} task={task} onSelect={onSelectTask} />
+        <TaskItem
+          key={task.id}
+          task={task}
+          onSelect={onSelectTask}
+          onToggleStatus={onToggleStatus}
+        />
       ))}
     </div>
   );

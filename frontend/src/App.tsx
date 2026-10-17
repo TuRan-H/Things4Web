@@ -1,11 +1,19 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { RefreshCw, AlertCircle, Star, Layers, Calendar, Archive, Folder, Inbox, CircleDot } from 'lucide-react';
-import { ListInfo, Task } from './types/things';
-import { fetchLists, fetchTasks, refreshThings, ApiError } from './api/client';
+import { CreateTaskInput, ListInfo, Task } from './types/things';
+import {
+  fetchLists,
+  fetchTasks,
+  refreshThings,
+  createTask,
+  completeTask,
+  ApiError,
+} from './api/client';
 import { Sidebar } from './components/Sidebar';
 import { FilterBar } from './components/FilterBar';
 import { TaskList } from './components/TaskList';
 import { TaskDetailModal } from './components/TaskDetailModal';
+import { TaskCreateInput } from './components/TaskCreateInput';
 
 export const App: React.FC = () => {
   const [lists, setLists] = useState<ListInfo[]>([]);
@@ -98,6 +106,65 @@ export const App: React.FC = () => {
     const nextMock = !useMock;
     setUseMock(nextMock);
     setError(null);
+  };
+
+  // 勾选/切换任务完成状态 (乐观更新)
+  const handleToggleTaskStatus = async (task: Task) => {
+    const newStatus = task.status === 'completed' ? 'open' : 'completed';
+    const now = new Date().toISOString();
+
+    // 乐观更新
+    const previousTasks = [...tasks];
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === task.id
+          ? {
+              ...t,
+              status: newStatus,
+              completionDate: newStatus === 'completed' ? now : null,
+              modificationDate: now,
+            }
+          : t
+      )
+    );
+
+    if (selectedTaskForModal?.id === task.id) {
+      setSelectedTaskForModal((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: newStatus,
+              completionDate: newStatus === 'completed' ? now : null,
+              modificationDate: now,
+            }
+          : null
+      );
+    }
+
+    try {
+      const updated = await completeTask(task.id, newStatus, useMock);
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? updated : t)));
+      if (selectedTaskForModal?.id === task.id) {
+        setSelectedTaskForModal(updated);
+      }
+    } catch (err: unknown) {
+      // 失败时回滚
+      setTasks(previousTasks);
+      const msg = err instanceof Error ? err.message : '更新待办状态失败';
+      setError(msg);
+    }
+  };
+
+  // 添加新待办
+  const handleCreateTask = async (input: CreateTaskInput) => {
+    try {
+      const newTask = await createTask(input, useMock);
+      setTasks((prev) => [newTask, ...prev]);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '创建待办失败';
+      setError(msg);
+      throw err;
+    }
   };
 
   // 根据搜索关键字过滤
@@ -199,10 +266,16 @@ export const App: React.FC = () => {
         )}
 
         <div className="task-list-container">
+          <TaskCreateInput
+            selectedList={selectedList}
+            onCreateTask={handleCreateTask}
+          />
+
           <TaskList
             tasks={filteredTasks}
             loading={loadingTasks}
             onSelectTask={(task) => setSelectedTaskForModal(task)}
+            onToggleStatus={handleToggleTaskStatus}
             selectedList={selectedList}
           />
         </div>
@@ -211,6 +284,7 @@ export const App: React.FC = () => {
       <TaskDetailModal
         task={selectedTaskForModal}
         onClose={() => setSelectedTaskForModal(null)}
+        onToggleStatus={handleToggleTaskStatus}
       />
     </div>
   );

@@ -36,3 +36,14 @@
       - 在属性解析中，若任务本身未直接挂载 area 但其属于某个 project，自动从所属 project 递归继承 `areaId` 与 `areaName`。
       - 查询 Project 时直接定位项目并返回其内部所有真实待办。
     - **前端展示层（`Sidebar.tsx`）**：在侧边栏中将项目（Projects）层级化缩进展示在所属区域（Areas）下方，支持点击区域查看该区域全量待办，或点击具体项目仅查看该项目下的待办。
+
+- [x] **实现在前端中完成一个 item 和添加一个 item**
+  - **完成 item（Task Completion）**：
+    - **JXA 脚本（`backend/scripts/complete_task.js`）**：根据待办 ID 精确定位 `app.toDos.byId(id)`，直接更新 `todo.status = "completed"`（或 `"open"`），并将更新后的标准 Task 实体按规范格式化返回。
+    - **后端接口**：`POST /api/v1/tasks/:id/complete` 与 `PATCH /api/v1/tasks/:id`，支持状态切换（completed / open）。
+    - **前端交互**：点击待办卡片左侧的圆圈勾选框，进行乐观更新（界面立即打勾划线/变灰，随后异步通知后端）；若在详情弹窗中，也支持一键切换完成状态。
+  - **添加 item（Task Creation）**：
+    - **JXA 脚本（`backend/scripts/create_task.js`）**：调用 `app.ToDo({ name, notes, dueDate, tagNames, project, area })`，自动解析所属清单（若为项目或区域则正确关联；若为“今天”则调用 Things3 原生命令 `app.schedule(todo, { for: new Date() })` 进行排期）。
+    - **后端接口**：`POST /api/v1/tasks`，接收创建参数并返回 201 Created 和规范 Task 实体。
+    - **前端交互（`TaskCreateInput.tsx`）**：在任务列表顶部常驻快速输入框，支持直接输入标题按 Enter 秒级创建并保持焦点（方便连续添加）；支持展开填写备注、截止日期、标签等详细信息。
+  - **Mock 模式兼容**：在离线演示模式下，同样完整支持新增待办、切换完成状态，保证无后端环境时的演示闭环。
